@@ -14,7 +14,7 @@ from functools import partial
 from distutils.util import strtobool
 
 sample_rate = 8000
-
+'''
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--model_path', type=str, default='checkpoints/in_use/resnet_with_augmentation')
@@ -27,16 +27,16 @@ parser.add_argument('--save_to_audio_files', type=str, default='True')
 parser.add_argument('--save_to_textgrid', type=str, default='False')
 
 args = parser.parse_args()
+'''
 
-
-model_path = args.model_path
-config = configs.CONFIG_MAP[args.config]
-audio_path = args.input_audio_file
-threshold = float(args.threshold)
-min_length = float(args.min_length)
-save_to_audio_files = bool(strtobool(args.save_to_audio_files))
-save_to_textgrid = bool(strtobool(args.save_to_textgrid))
-output_dir = args.output_dir
+model_path = "checkpoints/in_use/resnet_with_augmentation"
+config = configs.CONFIG_MAP["resnet_with_augmentation"]
+audio_path = "tst_wave.wav"
+threshold = float(0.5)
+min_length = float(0.2)
+save_to_audio_files = bool(strtobool("True"))
+save_to_textgrid = bool(strtobool("False"))
+output_dir = "./tst_wave"
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Using device {device}")
@@ -83,7 +83,7 @@ file_length = audio_utils.get_audio_length(audio_path)
 fps = len(probs)/float(file_length)
 
 probs = laugh_segmenter.lowpass(probs)
-instances = laugh_segmenter.get_laughter_instances(probs, threshold=threshold, min_length=float(args.min_length), fps=fps)
+instances = laugh_segmenter.get_laughter_instances(probs, threshold=threshold, min_length=min_length, fps=fps)
 
 print(); print("found %d laughs." % (len (instances)))
 
@@ -102,7 +102,9 @@ if len(instances) > 0:
                 wav_path = output_dir + "/laugh_" + str(index) + ".wav"
                 scipy.io.wavfile.write(wav_path, full_res_sr, (laughs * maxv).astype(np.int16))
                 wav_paths.append(wav_path)
+            sys.stdout = open("test.txt", "w")
             print(laugh_segmenter.format_outputs(instances, wav_paths))
+            sys.stdout.close()
     
     if save_to_textgrid:
         laughs = [{'start': i[0], 'end': i[1]} for i in instances]
