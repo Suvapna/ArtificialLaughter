@@ -1,1 +1,0 @@
-[{'filename': './tst_wave/laugh_0.wav', 'start': 0.0, 'end': 25.912677389301976}, {'filename': './tst_wave/laugh_1.wav', 'start': 28.01690027949164, 'end': 31.114127230220255}, {'filename': './tst_wave/laugh_2.wav', 'start': 32.76913399778516, 'end': 34.28228304241593}, {'filename': './tst_wave/laugh_3.wav', 'start': 34.89699984179718, 'end': 55.986514651338574}]
