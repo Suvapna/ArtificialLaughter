@@ -98,6 +98,7 @@ def download(video,hashtag):
                 newFile = filename[:-5]
                 #print("new Filename of webm is: " + newFile)
             
+            moveFile()
             convert(newFile)
             split(newFile, video, video_title,hashtag)
               
@@ -283,5 +284,4 @@ def moveFile():
     
                  
 createCsv()
-moveFile()
 search()
