@@ -21,6 +21,7 @@ from pydub import AudioSegment
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 import soundfile as sf
 import shutil
+import glob
 
 def createCsv():
     #create new csv
@@ -52,15 +53,14 @@ def search():
                     print("https://www.youtube.com/watch?v=" + video_ids[x])
                     
                     #call download function
-
                     
                     try:
                         download(video,hashtag)
                     except Exception:
                         print("Failed to Download!: " + video)
                     pass
-                    
-                    
+                                      
+                
                     x += 1
 
 
@@ -99,7 +99,7 @@ def download(video,hashtag):
                 #print("new Filename of webm is: " + newFile)
             
             convert(newFile)
-           # split(newFile, video, video_title,hashtag)
+            split(newFile, video, video_title,hashtag)
               
 
 
@@ -126,13 +126,12 @@ def split(audio, video, video_title, hashtag):
         print('seconds = {}'.format(file.frames / file.samplerate))
 
         #get the laugh ( audio or newFile?)
+        
         try:
-            segment_laughter(audio,hashtag, video, video_title)      
+            segment_laughter(audio,hashtag, video, video_title)
         except Exception:
             print("Skip Exception!: " + audio)
         pass
-
-        moveFile(audio + ".wav")
     
         #print("Final File : " + audio)
 
@@ -165,7 +164,6 @@ def split(audio, video, video_title, hashtag):
                 print("Skip Exception!: "+ str(times.index(time)+1) + "-" + audio)
             pass
             
-            moveFile(str(times.index(time)+1) + "-" + audio + ".wav")
                         
                        
             
@@ -252,13 +250,15 @@ def segment_laughter(wav_file,hashtag, video, video_title):
                     wav_path = output_dir + "/"+ wav_file + str(index) + ".wav"
                     scipy.io.wavfile.write(wav_path, full_res_sr, (laughs * maxv).astype(np.int16))
                     wav_paths.append(wav_path)
+
                 
                 with open('results.csv', 'a', newline='',encoding="utf-8") as file:
                         writer = csv.writer(file)
                         writer.writerow([hashtag,video,wav_file,laugh_segmenter.format_outputs(instances, wav_paths)])
 
                         print(laugh_segmenter.format_outputs(instances, wav_paths))
-                
+
+                       
         
         if save_to_textgrid:
             laughs = [{'start': i[0], 'end': i[1]} for i in instances]
@@ -273,17 +273,15 @@ def segment_laughter(wav_file,hashtag, video, video_title):
                 os.path.join(output_dir, fname + '_laughter.TextGrid')))
 
 
-def moveFile(dst):
-     # move File with absolut path
+def moveFile():
     try:
-        src_path = r"C:\Users\Suvi\Desktop\ArtificialLaughter\\" + dst
-        dst_path = r"C:\Users\Suvi\Desktop\ArtificialLaughter\audio\\" + dst
-        shutil.move(src_path, dst_path)
+        for data in glob.glob(r"C:.\*.wav"):
+            shutil.move(data,r"C:.\audio")
     except Exception:
-        print("Failed to move File!: " + dst)
+        print("Failed move the File")
     pass
-
-        
-            
+    
+                 
 createCsv()
+moveFile()
 search()
