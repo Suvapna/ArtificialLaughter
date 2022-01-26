@@ -8,3 +8,5 @@ pandas
 tqdm
 nltk
 youtube-dl
+pydub
+AudioSegment
