@@ -23,6 +23,8 @@ import soundfile as sf
 import shutil
 import glob
 
+output_dir = "./laughter"
+
 def createCsv():
     #create new csv
     if not os.path.isfile('./results.csv'):
@@ -34,34 +36,34 @@ def createCsv():
 
 def search():
     with open('keywords.csv', 'r') as read_obj:
-            csv_reader = reader(read_obj)
-            for row in csv_reader:
+        csv_reader = reader(read_obj)
+        for row in csv_reader:
 
-                hashtag = str(row[0])
-                #search yt-video with hastags
-                search_keyword = ("%23"+str(row[0]))
-                html = urllib.request.urlopen("https://www.youtube.com/results?search_query=" + search_keyword)
-                video_ids = re.findall(r"watch\?v=(\S{11})",html.read().decode())
+            hashtag = str(row[0])
+            #search yt-video with hastags
+            search_keyword = ("%23"+str(row[0]))
+            html = urllib.request.urlopen("https://www.youtube.com/results?search_query=" + search_keyword)
+            video_ids = re.findall(r"watch\?v=(\S{11})",html.read().decode())
 
-                x = 0
-                #concat all found video ids with link
-                for video_id in video_ids:
+            x = 0
+            #concat all found video ids with link
+            for video_id in video_ids:
 
-                    video = ("https://www.youtube.com/watch?v=" + video_ids[x])
+                video = ("https://www.youtube.com/watch?v=" + video_ids[x])
 
-                    print (row[0])
-                    print("https://www.youtube.com/watch?v=" + video_ids[x])
-                    
-                    #call download function
-                    
-                    try:
-                        download(video,hashtag)
-                    except Exception:
-                        print("Failed to Download!: " + video)
-                    pass
-                                      
-                
-                    x += 1
+                print (row[0])
+                print("https://www.youtube.com/watch?v=" + video_ids[x])
+
+                #call download function
+
+                try:
+                    download(video,hashtag)
+                except Exception:
+                    print("Failed to Download!: " + video)
+                pass
+
+
+                x += 1
 
 
 def download(video,hashtag):
@@ -76,7 +78,7 @@ def download(video,hashtag):
 
     if __name__ == "__main__":
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            
+
             #get video informations
             info_dict = ydl.extract_info(video, download=False)
             video_url = info_dict.get("url", None)
@@ -97,11 +99,11 @@ def download(video,hashtag):
             elif(filename[-3:]=="ebm"):
                 newFile = filename[:-5]
                 #print("new Filename of webm is: " + newFile)
-            
+
             moveFile()
             convert(newFile)
             split(newFile, video, video_title,hashtag)
-              
+
 
 
 def convert(audio):
@@ -116,7 +118,7 @@ def convert(audio):
 
         #delete mp3
         os.remove(audio + ".mp3")
-         
+
 
 
 def split(audio, video, video_title, hashtag):
@@ -127,16 +129,16 @@ def split(audio, video, video_title, hashtag):
         print('seconds = {}'.format(file.frames / file.samplerate))
 
         #get the laugh ( audio or newFile?)
-        
+
         try:
-            segment_laughter(audio,hashtag, video, video_title)
-        except Exception:
-            print("Skip Exception!: " + audio)
+            segment_laughter(audio, output_dir, hashtag, video, video_title)
+        except Exception as x:
+            print(f"Skip Exception!: {audio} ({x})")
         pass
-    
+
         #print("Final File : " + audio)
 
-    # if wav longer than 5 min cut 
+    # if wav longer than 5 min cut
     elif int(float(format(file.frames / file.samplerate))) > 300:
         print('seconds = {}'.format(file.frames / file.samplerate))
         # Replace the filename below.
@@ -145,7 +147,7 @@ def split(audio, video, video_title, hashtag):
         with open("times.txt") as f:
             times = f.readlines()
 
-        times = [x.strip() for x in times] 
+        times = [x.strip() for x in times]
 
         n = 0
         for time in times:
@@ -155,20 +157,21 @@ def split(audio, video, video_title, hashtag):
             ffmpeg_extract_subclip(required_video_file, starttime, endtime, targetname=str(times.index(time)+1)+ "-" + audio +".wav")
 
             n += 1
-            
+
             #get the laugh
             print("Final File Part : " + str(times.index(time)+1) + "-" + audio)
             #try catch block- if file too small
             try:
-                segment_laughter(str(times.index(time)+1) + "-" + audio,hashtag, video, video_title)
-            except Exception:
-                print("Skip Exception!: "+ str(times.index(time)+1) + "-" + audio)
+                segment_laughter(str(times.index(time)+1) + "-" + audio,
+                                 output_dir, hashtag, video, video_title)
+            except Exception as x:
+                print(f"Skip Exception!: {str(times.index(time)+1)} - {audio} ({x})")
             pass
-            
-                        
-                       
-            
-def segment_laughter(wav_file,hashtag, video, video_title):
+
+
+
+
+def segment_laughter(wav_file, output_dir, hashtag, video, video_title):
     sample_rate = 8000
 
     model_path = "checkpoints/in_use/resnet_with_augmentation"
@@ -178,7 +181,6 @@ def segment_laughter(wav_file,hashtag, video, video_title):
     min_length = float(0.2)
     save_to_audio_files = bool(strtobool("True"))
     save_to_textgrid = bool(strtobool("False"))
-    output_dir = "./laughter"
 
     # represents the data type of a torch( cpu/cuda)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -195,9 +197,9 @@ def segment_laughter(wav_file,hashtag, video, video_title):
         model.eval()
     else:
         raise Exception(f"Model checkpoint not found at {model_path}")
-        
+
     # Load the audio file and features
-        
+
     inference_dataset = data_loaders.SwitchBoardLaughterInferenceDataset(
         audio_path=audio_path, feature_fn=feature_fn, sr=sample_rate)
 
@@ -235,12 +237,12 @@ def segment_laughter(wav_file,hashtag, video, video_title):
         with open('results.csv', 'a', newline='',encoding="utf-8") as file:
                         writer = csv.writer(file)
                         writer.writerow([hashtag,video,wav_file,"found 0 laughs"])
-    #if laughter found 
+    #if laughter found
     elif len(instances) > 0:
         full_res_y, full_res_sr = librosa.load(audio_path,sr=44100)
         wav_paths = []
         maxv = np.iinfo(np.int16).max
-        
+
         if save_to_audio_files:
             if output_dir is None:
                 raise Exception("Need to specify an output directory to save audio files")
@@ -252,15 +254,13 @@ def segment_laughter(wav_file,hashtag, video, video_title):
                     scipy.io.wavfile.write(wav_path, full_res_sr, (laughs * maxv).astype(np.int16))
                     wav_paths.append(wav_path)
 
-                
                 with open('results.csv', 'a', newline='',encoding="utf-8") as file:
                         writer = csv.writer(file)
                         writer.writerow([hashtag,video,wav_file,laugh_segmenter.format_outputs(instances, wav_paths)])
 
                         print(laugh_segmenter.format_outputs(instances, wav_paths))
 
-                       
-        
+
         if save_to_textgrid:
             laughs = [{'start': i[0], 'end': i[1]} for i in instances]
             tg = tgt.TextGrid()
@@ -281,7 +281,7 @@ def moveFile():
     except Exception:
         print("Failed move the File")
     pass
-    
-                 
+
+
 createCsv()
 search()
