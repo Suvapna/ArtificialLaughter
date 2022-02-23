@@ -26,3 +26,14 @@ share/python-wheels/
 .installed.cfg
 *.egg
 .ipynb_checkpoints
+
+# video/audio specific
+*.m4a
+*.m4a.part
+*.mp3
+*.wav
+
+# pipeline specific
+results.csv
+audio
+*.exe
