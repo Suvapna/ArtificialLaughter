@@ -10,3 +10,4 @@ nltk
 youtube-dl
 pydub
 AudioSegment
+moviepy
