@@ -23,6 +23,7 @@ import soundfile as sf
 import shutil
 import glob
 
+current_dir = os.getcwd()
 output_dir = "./laughter"
 
 def createCsv():
@@ -58,15 +59,15 @@ def search():
 
                 try:
                     download(video,hashtag)
-                except Exception:
-                    print("Failed to Download!: " + video)
+                except Exception as error_msg:
+                    print(f"Failed to Download!: {video} ({error_msg})")
                 pass
 
 
                 x += 1
 
 
-def download(video,hashtag):
+def download(video, hashtag):
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprocessors': [{
@@ -102,7 +103,7 @@ def download(video,hashtag):
 
             moveFile()
             convert(newFile)
-            split(newFile, video, video_title,hashtag)
+            split(newFile, video, video_title, hashtag)
 
 
 
@@ -132,8 +133,8 @@ def split(audio, video, video_title, hashtag):
 
         try:
             segment_laughter(audio, output_dir, hashtag, video, video_title)
-        except Exception as x:
-            print(f"Skip Exception!: {audio} ({x})")
+        except Exception as error_msg:
+            print(f"Skip Exception!: {audio} ({error_msg})")
         pass
 
         #print("Final File : " + audio)
@@ -164,8 +165,8 @@ def split(audio, video, video_title, hashtag):
             try:
                 segment_laughter(str(times.index(time)+1) + "-" + audio,
                                  output_dir, hashtag, video, video_title)
-            except Exception as x:
-                print(f"Skip Exception!: {str(times.index(time)+1)} - {audio} ({x})")
+            except Exception as error_msg:
+                print(f"Skip Exception!: {str(times.index(time)+1)} - {audio} ({error_msg})")
             pass
 
 
@@ -276,8 +277,8 @@ def segment_laughter(wav_file, output_dir, hashtag, video, video_title):
 
 def moveFile():
     try:
-        for data in glob.glob(r"C:.\*.wav"):
-            shutil.move(data,r"C:.\audio")
+        for data in glob.glob(r".\*.wav"):
+            shutil.move(data, os.path.join(current_dir, "audio"))
     except Exception:
         print("Failed move the File")
     pass
